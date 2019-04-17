@@ -12,29 +12,21 @@ class CalculatorTest {
     private final Calculator testee = new Calculator(new CalculatorCallback());
 
     @Test
-    void parseExpression_symbol_success() {
+    void parseExpression_symbol() {
         assertEquals(Math.PI, testee.parseExpression("pi"));
         assertEquals(Math.E, testee.parseExpression("e"));
-    }
-
-    @Test
-    void parseExpression_symbolUnknown_failure() {
         assertNull(testee.parseExpression("x"));
+        assertNull(testee.parseExpression(""));
     }
 
     @Test
-    void parseExpression_number_success() {
+    void parseExpression_number() {
         assertEquals(1234.0, testee.parseExpression("1234"));
         assertEquals(1234.0, testee.parseExpression("001234"));
     }
 
     @Test
-    void parseExpression_empty_failure() {
-        assertNull(testee.parseExpression(""));
-    }
-
-    @Test
-    void parseExpression_add_success() {
+    void parseExpression_add() {
         assertEquals(12 + 34, testee.parseExpression("12+34"));
         assertEquals(34 - 12, testee.parseExpression("34-12"));
 
@@ -43,7 +35,7 @@ class CalculatorTest {
     }
 
     @Test
-    void parseExpression_mul_success() {
+    void parseExpression_mul() {
         assertEquals(7 * 3, testee.parseExpression("7*3"));
         assertEquals(21 / 3, testee.parseExpression("21/3"));
 
@@ -52,9 +44,18 @@ class CalculatorTest {
     }
 
     @Test
-    void parseExpression_predcedence_success() {
+    void parseExpression_predcedence() {
         assertEquals(2 * 2 + 5 * 5, testee.parseExpression("2*2+5*5"));
         assertEquals(2 * 2 - 5 * 5, testee.parseExpression("2*2-5*5"));
+    }
+
+    @Test
+    void parseExpression_braces() {
+        assertEquals(12 + 34, testee.parseExpression("(12+34)"));
+        assertEquals(12 + 34, testee.parseExpression("12+(34)"));
+        assertEquals(12 + 34, testee.parseExpression("((12)+(34))"));
+        assertEquals(2 * 2 - 5 * 5, testee.parseExpression("(2*2)-(5*5)"));
+        assertEquals(2 * (2 - 5) * 5, testee.parseExpression("2*(2-5)*5"));
     }
 
     private class CalculatorCallback implements Calculator.Callback {

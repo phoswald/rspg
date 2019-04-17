@@ -79,7 +79,7 @@ public class Calculator {
     private boolean parseExprMul(Ref<Double> output) {
         int offset = this.offset;
         {
-            if (parseValue(output)) {
+            if (parseBrace(output)) {
                 if (parseOpMul(output)) {
                     return true;
                 }
@@ -94,7 +94,7 @@ public class Calculator {
         {
             if (matchToken("*")) {
                 Ref<Double> element1 = new Ref<>();
-                if (parseValue(element1)) {
+                if (parseBrace(element1)) {
                     output.value = callback.mul(output.value, element1.value);
                     if (parseOpMul(output)) {
                         return true;
@@ -106,7 +106,7 @@ public class Calculator {
         {
             if (matchToken("/")) {
                 Ref<Double> element1 = new Ref<>();
-                if (parseValue(element1)) {
+                if (parseBrace(element1)) {
                     output.value = callback.div(output.value, element1.value);
                     if (parseOpMul(output)) {
                         return true;
@@ -118,6 +118,27 @@ public class Calculator {
         {
             return true;
         }
+    }
+
+    private boolean parseBrace(Ref<Double> output) {
+        int offset = this.offset;
+        {
+            if (matchToken("(")) {
+                if (parseExpression(output)) {
+                    if (matchToken(")")) {
+                        return true;
+                    }
+                }
+            }
+        }
+        this.offset = offset;
+        {
+            if (parseValue(output)) {
+                return true;
+            }
+        }
+        this.offset = offset;
+        return false;
     }
 
     private boolean parseValue(Ref<Double> output) {

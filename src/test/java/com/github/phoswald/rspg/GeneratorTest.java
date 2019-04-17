@@ -44,14 +44,21 @@ class GeneratorTest {
         rules.add(Rule.builder() //
                 .name("ExprMul") //
                 .javaType("Double") //
-                .alternative(alternative(symbol("Value").linked(), symbol("OpMul").linked())) //
+                .alternative(alternative(symbol("Brace").linked(), symbol("OpMul").linked())) //
                 .build());
         rules.add(Rule.builder() //
                 .name("OpMul") //
                 .javaType("Double") //
-                .alternative(alternative(token("*"), symbol("Value").callbackLinked("mul"), symbol("OpMul").linked())) //
-                .alternative(alternative(token("/"), symbol("Value").callbackLinked("div"), symbol("OpMul").linked())) //
+                .alternative(alternative(token("*"), symbol("Brace").callbackLinked("mul"), symbol("OpMul").linked())) //
+                .alternative(alternative(token("/"), symbol("Brace").callbackLinked("div"), symbol("OpMul").linked())) //
                 .alternative(alternative()) //
+                .build());
+
+        rules.add(Rule.builder() //
+                .name("Brace") //
+                .javaType("Double") //
+                .alternative(alternative(token("("), symbol("Expression").linked(), token(")"))) //
+                .alternative(alternative(symbol("Value").linked())) //
                 .build());
 
         rules.add(Rule.builder() //
