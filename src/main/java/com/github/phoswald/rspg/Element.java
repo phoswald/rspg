@@ -7,7 +7,7 @@ package com.github.phoswald.rspg;
  */
 public interface Element {
 
-    public String getCallback();
+    public String callback();
 
-    public boolean isCallbackLinked();
+    public boolean callbackLinked();
 }

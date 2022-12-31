@@ -1,49 +1,46 @@
 package com.github.phoswald.rspg;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import java.util.Objects;
 
 /**
  * A symbol is a reference to a rule.
  */
-@Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class Symbol implements Element {
+public record Symbol( //
+        /**
+         * The name of the rule.
+         */
+        String name, //
+        /**
+         * Indicates whether the output is passed as an argument to the rule.
+         */
+        boolean linked, //
+        /**
+         * Indicates whether the output is passed as an argument to the callback.
+         */
+        boolean callbackLinked, //
+        /**
+         * The callback to be called if the symbol matches.
+         */
+        String callback //
+) implements Element {
 
-    /**
-     * The name of the rule.
-     */
-    private final String name;
-
-    /**
-     * Indicates whether the output is passed as an argument to the rule.
-     */
-    private final boolean linked;
-
-    /**
-     * Indicates whether the output is passed as an argument to the callback.
-     */
-    private final boolean callbackLinked;
-
-    /**
-     * The callback to be called if the symbol matches.
-     */
-    private final String callback;
+    public Symbol {
+        Objects.requireNonNull(name);
+    }
 
     public static Symbol symbol(String name) {
         return new Symbol(name, false, false, null);
     }
 
-    public Symbol linked() {
+    public Symbol withLinked() {
         return new Symbol(name, true, callbackLinked, callback);
     }
 
-    public Symbol callback(String callback) {
+    public Symbol withCallback(String callback) {
         return new Symbol(name, linked, false, callback);
     }
 
-    public Symbol callbackLinked(String callback) {
+    public Symbol withCallbackLinked(String callback) {
         return new Symbol(name, linked, true, callback);
     }
 }

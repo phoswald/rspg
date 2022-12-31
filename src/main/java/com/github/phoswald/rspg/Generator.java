@@ -13,8 +13,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import lombok.AllArgsConstructor;
-
 public class Generator {
 
     private final Grammar grammar;
@@ -26,8 +24,8 @@ public class Generator {
     }
 
     public void generate(Path targetPath) throws IOException {
-        String javaPackage = grammar.getJavaType().substring(0, grammar.getJavaType().lastIndexOf("."));
-        String javaClass = grammar.getJavaType().substring(grammar.getJavaType().lastIndexOf(".") + 1);
+        String javaPackage = grammar.javaType().substring(0, grammar.javaType().lastIndexOf("."));
+        String javaClass = grammar.javaType().substring(grammar.javaType().lastIndexOf(".") + 1);
         Path targetPackage = targetPath.resolve(javaPackage.replace(".", "/"));
         Path targetClass = targetPackage.resolve(javaClass + ".java");
         Files.createDirectories(targetPackage);
@@ -48,7 +46,7 @@ public class Generator {
         writer.write("    public " + javaClass + "(Callback callback) {\n");
         writer.write("        this.callback = callback;\n");
         writer.write("    }\n");
-        for (Rule rule : grammar.getRules()) {
+        for (Rule rule : grammar.rules()) {
             generateRule(writer, rule);
         }
         generateHelpers(writer);
@@ -57,13 +55,13 @@ public class Generator {
     }
 
     private void generateRule(Writer writer, Rule rule) throws IOException {
-        if (rule.isExport()) {
+        if (rule.export()) {
             writer.write("\n");
-            writer.write("    public " + rule.getJavaType() + " parse" + rule.getName() + "(String input) {\n");
+            writer.write("    public " + rule.javaType() + " parse" + rule.name() + "(String input) {\n");
             writer.write("        this.input = input;\n");
             writer.write("        this.offset = 0;\n");
-            writer.write("        Ref<" + rule.getJavaType() + "> output = new Ref<>();\n");
-            writer.write("        if (parse" + rule.getName() + "(output) && this.offset == input.length()) {\n");
+            writer.write("        Ref<" + rule.javaType() + "> output = new Ref<>();\n");
+            writer.write("        if (parse" + rule.name() + "(output) && this.offset == input.length()) {\n");
             writer.write("            return output.value;\n");
             writer.write("        } else {\n");
             writer.write("            return null;\n");
@@ -71,11 +69,11 @@ public class Generator {
             writer.write("    }\n");
         }
         writer.write("\n");
-        writer.write("    private boolean parse" + rule.getName() + "(Ref<" + rule.getJavaType() + "> output) {\n");
+        writer.write("    private boolean parse" + rule.name() + "(Ref<" + rule.javaType() + "> output) {\n");
         writer.write("        int offset = this.offset;\n");
         boolean emptyAlternative = false;
         boolean firstAlternative = true;
-        for (Alternative alternative : rule.getAlternatives()) {
+        for (Alternative alternative : rule.alternatives()) {
             if (!firstAlternative) {
                 writer.write("        this.offset = offset;\n");
             }
@@ -84,41 +82,39 @@ public class Generator {
             String indent = "";
             int nr = 0;
             List<Argument> callbackArgs = new ArrayList<>();
-            for (Element element : alternative.getElements()) {
-                if (element instanceof Token) {
-                    Token token = (Token) element;
-                    if (token.isPass()) {
+            for (Element element : alternative.elements()) {
+                if (element instanceof Token token) {
+                    if (token.pass()) {
                         nr++;
                         writer.write("            " + indent + "int offset" + nr + " = this.offset;\n");
                     }
-                    tokenTypes.add(token.getType());
-                    writer.write("            " + indent + "if (match" + token.getType() + "(\"" + token.getText() + "\")) {\n");
-                    if (token.isPass()) {
+                    tokenTypes.add(token.type());
+                    writer.write("            " + indent + "if (match" + token.type() + "(\"" + token.text() + "\")) {\n");
+                    if (token.pass()) {
                         writer.write("                " + indent + "String token" + nr + " = input.substring(offset" + nr + ", this.offset);\n");
                         callbackArgs.add(new Argument("String", "token" + nr, "token" + nr));
                     }
-                } else if (element instanceof Symbol) {
-                    Symbol symbol = (Symbol) element;
-                    if (!symbol.isLinked()) {
+                } else if (element instanceof Symbol symbol) {
+                    if (!symbol.linked()) {
                         nr++;
-                        String symbolJavaType = findRule(symbol).getJavaType();
+                        String symbolJavaType = findRule(symbol).javaType();
                         writer.write("            " + indent + "Ref<" + symbolJavaType + "> element" + nr + " = new Ref<>();\n");
-                        writer.write("            " + indent + "if (parse" + symbol.getName() + "(element" + nr + ")) {\n");
+                        writer.write("            " + indent + "if (parse" + symbol.name() + "(element" + nr + ")) {\n");
                         callbackArgs.add(new Argument(symbolJavaType, "element" + nr, "element" + nr + ".value"));
                     } else {
-                        writer.write("            " + indent + "if (parse" + symbol.getName() + "(output)) {\n");
+                        writer.write("            " + indent + "if (parse" + symbol.name() + "(output)) {\n");
                     }
                 } else {
                     throw new IllegalStateException("Unknown element type");
                 }
                 indent += "    ";
-                if (element.isCallbackLinked()) {
-                    callbackArgs.add(0, new Argument(rule.getJavaType(), "output", "output.value"));
+                if (element.callbackLinked()) {
+                    callbackArgs.add(0, new Argument(rule.javaType(), "output", "output.value"));
                 }
-                if (element.getCallback() != null) {
+                if (element.callback() != null) {
                     String argumentExprs = getArgumentExprs(callbackArgs);
-                    writer.write("            " + indent + "output.value = callback." + element.getCallback() + "(" + argumentExprs + ");\n");
-                    callbacks.put(element.getCallback(), callbackArgs);
+                    writer.write("            " + indent + "output.value = callback." + element.callback() + "(" + argumentExprs + ");\n");
+                    callbacks.put(element.callback(), callbackArgs);
                     callbackArgs = new ArrayList<>();
                 }
             }
@@ -128,7 +124,7 @@ public class Generator {
                 writer.write("            " + indent + "}\n");
             }
             writer.write("        }\n");
-            if (alternative.getElements().isEmpty()) {
+            if (alternative.elements().isEmpty()) {
                 emptyAlternative = true;
             }
         }
@@ -171,13 +167,13 @@ public class Generator {
     private void generateCallbackInterface(Writer writer) throws IOException {
         writer.write("\n");
         writer.write("    public static interface Callback {\n");
-        for (Rule rule : grammar.getRules()) {
-            for (Alternative alternative : rule.getAlternatives()) {
-                for (Element element : alternative.getElements()) {
-                    if (element.getCallback() != null) {
-                        String argumentDecls = getArgumentDecls(callbacks.get(element.getCallback()));
+        for (Rule rule : grammar.rules()) {
+            for (Alternative alternative : rule.alternatives()) {
+                for (Element element : alternative.elements()) {
+                    if (element.callback() != null) {
+                        String argumentDecls = getArgumentDecls(callbacks.get(element.callback()));
                         writer.write("\n");
-                        writer.write("        public " + rule.getJavaType() + " " + element.getCallback() + "(" + argumentDecls + ");\n");
+                        writer.write("        public " + rule.javaType() + " " + element.callback() + "(" + argumentDecls + ");\n");
                     }
                 }
             }
@@ -198,16 +194,11 @@ public class Generator {
     }
 
     private Rule findRule(Symbol symbol) {
-        return grammar.getRules().stream() //
-                .filter(rule -> Objects.equals(rule.getName(), symbol.getName())) //
+        return grammar.rules().stream() //
+                .filter(rule -> Objects.equals(rule.name(), symbol.name())) //
                 .findFirst() //
-                .orElseThrow(() -> new IllegalStateException("Rule not found: " + symbol.getName()));
+                .orElseThrow(() -> new IllegalStateException("Rule not found: " + symbol.name()));
     }
 
-    @AllArgsConstructor
-    private static class Argument {
-        private final String type;
-        private final String name;
-        private final String expr;
-    }
+    private record Argument(String type, String name, String expr) { }
 }

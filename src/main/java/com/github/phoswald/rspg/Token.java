@@ -1,41 +1,37 @@
 package com.github.phoswald.rspg;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NonNull;
+import java.util.Objects;
 
 /**
  * A token is a sequence of characters that occurs in the input.
  */
-@Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class Token implements Element {
+public record Token( //
+        /**
+         * The sequence of characters.
+         */
+        String text, //
+        /**
+         * Defines how the characters are interpreted.
+         */
+        Type type, //
+        /**
+         * Indicates whether the token is to be passed to the callback.
+         */
+        boolean pass, //
+        /**
+         * Indicates whether the output is passed as an argument to the callback.
+         */
+        boolean callbackLinked, //
+        /**
+         * The callback to be called if the token matches.
+         */
+        String callback //
+) implements Element {
 
-    /**
-     * The sequence of characters.
-     */
-    private final @NonNull String text;
-
-    /**
-     * Defines how the characters are interpreted.
-     */
-    private final @NonNull Type type;
-
-    /**
-     * Indicates whether the token is to be passed to the callback.
-     */
-    private final boolean pass;
-
-    /**
-     * Indicates whether the output is passed as an argument to the callback.
-     */
-    private final boolean callbackLinked;
-
-    /**
-     * The callback to be called if the token matches.
-     */
-    private final String callback;
+    public Token {
+        Objects.requireNonNull(text);
+        Objects.requireNonNull(type);
+    }
 
     public static Token token(String text) {
         return new Token(text, Type.Token, false, false, null);
@@ -45,25 +41,23 @@ public class Token implements Element {
         return new Token(text, Type.Set, false, false, null);
     }
 
-    public Token pass() {
+    public Token withPass() {
         return new Token(text, type, true, callbackLinked, callback);
     }
 
-    public Token callback(String callback) {
+    public Token withCallback(String callback) {
         return new Token(text, type, pass, false, callback);
     }
 
-    public Token callbackLinked(String callback) {
+    public Token withCallbackLinked(String callback) {
         return new Token(text, type, pass, true, callback);
     }
 
     public enum Type {
-
         /**
          * If true 'ab' means 'a' followed by 'b.
          */
         Token,
-
         /**
          * If true 'ab' means either 'a' or 'b'.
          */

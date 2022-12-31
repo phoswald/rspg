@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -25,64 +26,70 @@ class GeneratorTest {
                 .name("Expression") //
                 .javaType("Double") //
                 .export(true) //
-                .alternative(alternative(symbol("ExprAdd").linked())) //
+                .alternatives(Arrays.asList( //
+                        alternative(symbol("ExprAdd").withLinked()))) //
                 .build());
-
         rules.add(Rule.builder() //
                 .name("ExprAdd") //
                 .javaType("Double") //
-                .alternative(alternative(symbol("ExprMul").linked(), symbol("OpAdd").linked())) //
+                .alternatives(Arrays.asList( //
+                        alternative(symbol("ExprMul").withLinked(), symbol("OpAdd").withLinked()))) //
                 .build());
         rules.add(Rule.builder() //
                 .name("OpAdd") //
                 .javaType("Double") //
-                .alternative(alternative(token("+"), symbol("ExprMul").callbackLinked("add"), symbol("OpAdd").linked())) //
-                .alternative(alternative(token("-"), symbol("ExprMul").callbackLinked("sub"), symbol("OpAdd").linked())) //
-                .alternative(alternative()) //
+                .alternatives(Arrays.asList( //
+                        alternative(token("+"), symbol("ExprMul").withCallbackLinked("add"), symbol("OpAdd").withLinked()), //
+                        alternative(token("-"), symbol("ExprMul").withCallbackLinked("sub"), symbol("OpAdd").withLinked()), //
+                        alternative())) //
                 .build());
-
         rules.add(Rule.builder() //
                 .name("ExprMul") //
                 .javaType("Double") //
-                .alternative(alternative(symbol("Brace").linked(), symbol("OpMul").linked())) //
+                .alternatives(Arrays.asList( //
+                        alternative(symbol("Brace").withLinked(), symbol("OpMul").withLinked()))) //
                 .build());
         rules.add(Rule.builder() //
                 .name("OpMul") //
                 .javaType("Double") //
-                .alternative(alternative(token("*"), symbol("Brace").callbackLinked("mul"), symbol("OpMul").linked())) //
-                .alternative(alternative(token("/"), symbol("Brace").callbackLinked("div"), symbol("OpMul").linked())) //
-                .alternative(alternative()) //
+                .alternatives(Arrays.asList( //
+                        alternative(token("*"), symbol("Brace").withCallbackLinked("mul"), symbol("OpMul").withLinked()), //
+                        alternative(token("/"), symbol("Brace").withCallbackLinked("div"), symbol("OpMul").withLinked()), //
+                        alternative())) //
                 .build());
-
         rules.add(Rule.builder() //
                 .name("Brace") //
                 .javaType("Double") //
-                .alternative(alternative(token("("), symbol("Expression").linked(), token(")"))) //
-                .alternative(alternative(symbol("Value").linked())) //
+                .alternatives(Arrays.asList( //
+                        alternative(token("("), symbol("Expression").withLinked(), token(")")), //
+                        alternative(symbol("Value").withLinked()))) //
                 .build());
-
         rules.add(Rule.builder() //
                 .name("Value") //
                 .javaType("Double") //
-                .alternative(alternative(token("pi").callback("getPi"))) //
-                .alternative(alternative(token("e").callback("getE"))) //
-                .alternative(alternative(symbol("Number").callback("createNumber"))) //
+                .alternatives(Arrays.asList( //
+                        alternative(token("pi").withCallback("getPi")), //
+                        alternative(token("e").withCallback("getE")), //
+                        alternative(symbol("Number").withCallback("createNumber")))) //
                 .build());
         rules.add(Rule.builder() //
                 .name("Number") //
                 .javaType("Integer") //
-                .alternative(alternative(symbol("Digit").linked(), symbol("Digits").linked())) //
+                .alternatives(Arrays.asList( //
+                        alternative(symbol("Digit").withLinked(), symbol("Digits").withLinked()))) //
                 .build());
         rules.add(Rule.builder() //
                 .name("Digit") //
                 .javaType("Integer") //
-                .alternative(alternative(set("0123456789").pass().callbackLinked("handleDigit"))) //
+                .alternatives(Arrays.asList( //
+                        alternative(set("0123456789").withPass().withCallbackLinked("handleDigit")))) //
                 .build());
         rules.add(Rule.builder() //
                 .name("Digits") //
                 .javaType("Integer") //
-                .alternative(alternative(symbol("Digit").linked(), symbol("Digits").linked())) //
-                .alternative(alternative()) //
+                .alternatives(Arrays.asList( //
+                        alternative(symbol("Digit").withLinked(), symbol("Digits").withLinked()), //
+                        alternative())) //
                 .build());
         Grammar grammar = Grammar.builder() //
                 .name("Calculator") //
